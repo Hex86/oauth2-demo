@@ -17,8 +17,10 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.R
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter;
 import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
 /**
  * Created by xujingfeng on 2017/8/7.
@@ -32,11 +34,17 @@ public class OAuth2ServerConfig {
     @EnableResourceServer
     protected static class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
 
+        /**
+         * 与资源安全配置相关
+         */
         @Override
         public void configure(ResourceServerSecurityConfigurer resources) {
             resources.resourceId(DEMO_RESOURCE_ID).stateless(true);
         }
 
+        /**
+         * 与http安全配置相关
+         */
         @Override
         public void configure(HttpSecurity http) throws Exception {
             // @formatter:off
@@ -50,7 +58,7 @@ public class OAuth2ServerConfig {
                     .anonymous()
                     .and()
                     .authorizeRequests()
-                    .antMatchers("/product/**").access("#oauth2.hasScope('select') and hasPermission('delete')")
+//                    .antMatchers("/product/**").access("#oauth2.hasScope('select') and hasPermission('delete')")
                     .antMatchers("/order/**").authenticated();//配置order访问控制，必须认证过后才可以访问
             // @formatter:on
         }
@@ -88,10 +96,10 @@ public class OAuth2ServerConfig {
         @Override
         public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
             endpoints
-                    .tokenStore(new RedisTokenStore(redisConnectionFactory))
+//                    .tokenStore(new RedisTokenStore(redisConnectionFactory))
                     .tokenStore(new InMemoryTokenStore())
-                    .authenticationManager(authenticationManager)
-                    .userDetailsService(userDetailsService)
+                    .authenticationManager(authenticationManager)           // 用户账户的AuthenticationManager
+                    .userDetailsService(userDetailsService)                 // 用户账户的获取服务
                     // 2018-4-3 增加配置，允许 GET、POST 请求获取 token，即访问端点：oauth/token
                     .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST);
 
